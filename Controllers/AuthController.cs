@@ -36,7 +36,6 @@ namespace nhom5BackEnd.Controllers
             // Demo hard-coded users
             if (username == "dinh" && password == "123") return ("dinh", "Admin");
             if (username == "tuan" && password == "321") return ("tuan", "User");
-            if (username == "user" && password == "user") return ("user", "User");
             return null;
         }
 
