@@ -33,8 +33,10 @@ namespace nhom5BackEnd.Controllers
 
         private static (string Username, string Role)? ValidateUser(string username, string password)
         {
-            if (username == "dinh" && password == "123") return ("dinh", "123");
-            if (username == "tuan" && password == "321") return ("tuan", "321");
+            // Demo hard-coded users
+            if (username == "dinh" && password == "123") return ("dinh", "Admin");
+            if (username == "tuan" && password == "321") return ("tuan", "User");
+            if (username == "user" && password == "user") return ("user", "User");
             return null;
         }
 

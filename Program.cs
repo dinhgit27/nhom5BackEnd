@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
+using System.IO;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -68,6 +70,20 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+}
+
+// Serve static files from the "services" folder at the /services path
+var servicesPath = Path.Combine(app.Environment.ContentRootPath, "services");
+if (Directory.Exists(servicesPath))
+{
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(servicesPath),
+        RequestPath = "/services"
+    });
+
+    // Redirect root to the services index if it exists
+    app.MapGet("/", () => Results.Redirect("/services/index.html"));
 }
 
 app.UseHttpsRedirection();

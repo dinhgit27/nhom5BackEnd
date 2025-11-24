@@ -32,8 +32,8 @@ namespace nhom5BackEnd.Controllers
         public async Task<IActionResult> GetMyOrders()
         {
             var username = User.FindFirstValue(ClaimTypes.Name);
-            // For demo: map `user` -> customer id 1, `admin` -> customer id 2
-            int custId = username == "user" ? 1 : username == "admin" ? 2 : 0;
+            // For demo: map `user` -> customer id 1, `dinh` (admin) -> customer id 2
+            int custId = username == "user" ? 1 : username == "dinh" ? 2 : 0;
             if (custId == 0) return Unauthorized();
             var orders = await _db.Orders.Where(o => o.CustomerId == custId).Include(o => o.OrderDetails).ToListAsync();
             return Ok(orders);
@@ -45,7 +45,7 @@ namespace nhom5BackEnd.Controllers
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
             var username = User.FindFirstValue(ClaimTypes.Name);
-            int custId = username == "user" ? 1 : username == "admin" ? 2 : 0;
+            int custId = username == "user" ? 1 : username == "dinh" ? 2 : 0;
             if (custId == 0) return Unauthorized();
 
             if (dto.Items == null || !dto.Items.Any()) return BadRequest("Order must contain items");
