@@ -1,4 +1,3 @@
-// ==================== Login Page ====================
 const renderLoginPage = () => {
     return `
         <div class="login-container">

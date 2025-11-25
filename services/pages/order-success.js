@@ -1,4 +1,3 @@
-// ==================== Order Success Page ====================
 const renderOrderSuccessPage = () => {
     document.getElementById('main-content').innerHTML = `
         <div class="success-container">

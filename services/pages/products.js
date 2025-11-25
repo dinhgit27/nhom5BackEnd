@@ -1,4 +1,3 @@
-// ==================== Product Management Page ====================
 const renderProductManagementPage = () => {
     if (app.currentUser?.role !== 'Admin') {
         document.getElementById('main-content').innerHTML = `

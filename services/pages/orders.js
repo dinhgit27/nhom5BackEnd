@@ -1,4 +1,3 @@
-// ==================== Order Creation Page ====================
 const renderOrderCreationPage = () => {
     document.getElementById('main-content').innerHTML = `
         <div class="order-container">
