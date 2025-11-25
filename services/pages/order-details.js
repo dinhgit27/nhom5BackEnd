@@ -1,4 +1,3 @@
-// ==================== Order Details Page ====================
 const renderOrderDetailsPage = () => {
     const order = app.orders.find(o => o.OrderId === app.lastOrderId);
     if (!order) return;

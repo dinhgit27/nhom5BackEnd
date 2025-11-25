@@ -1,4 +1,3 @@
-// ==================== Layout ====================
 const renderLayout = () => {
     return `
         <div class="navbar">
