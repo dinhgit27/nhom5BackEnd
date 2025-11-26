@@ -37,12 +37,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(key),
             ClockSkew = TimeSpan.Zero,
             
-            // Quan trọng: Giữ nguyên tên Claim
+            // Đảm bảo 2 dòng này KHỚP với AuthController vừa sửa
             RoleClaimType = "role",
             NameClaimType = "unique_name" 
         };
     });
-
 builder.Services.AddAuthorization();
 
 builder.Services.AddCors(options =>
@@ -63,14 +62,6 @@ using (var scope = app.Services.CreateScope())
         db.Products.AddRange(
             new nhom5BackEnd.Models.Product { Name = "Bánh ngọt", Price = 15000, Description = "Ngon", Stock = 100 },
             new nhom5BackEnd.Models.Product { Name = "Mì tôm", Price = 5000, Description = "Cay", Stock = 50 }
-        );
-    }
-    // Tạo User mẫu để test đặt hàng
-    if (!db.Customers.Any())
-    {
-        db.Customers.AddRange(
-            new nhom5BackEnd.Models.Customer { Id = 1, Name = "User Demo", Email = "user@user.com", Address = "VN", Phone = "123" },
-            new nhom5BackEnd.Models.Customer { Id = 2, Name = "Admin Demo", Email = "admin@admin.com", Address = "VN", Phone = "456" }
         );
     }
     db.SaveChanges();

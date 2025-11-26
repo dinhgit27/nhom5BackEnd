@@ -1,3 +1,4 @@
+// --- OrdersController.cs ---
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -19,6 +20,17 @@ namespace nhom5BackEnd.Controllers
             _db = db;
         }
 
+        // Helper để lấy CustomerId từ Token
+        private int GetCurrentCustomerId()
+        {
+            var claim = User.FindFirst("CustomerId");
+            if (claim != null && int.TryParse(claim.Value, out int id))
+            {
+                return id;
+            }
+            return 0;
+        }
+
         [Authorize(Roles = "Admin")]
         [HttpGet]
         public async Task<IActionResult> GetAll()
@@ -31,10 +43,10 @@ namespace nhom5BackEnd.Controllers
         [HttpGet("my")]
         public async Task<IActionResult> GetMyOrders()
         {
-            var username = User.FindFirstValue(ClaimTypes.Name);
-            // For demo: map `user` -> customer id 1, `dinh` (admin) -> customer id 2
-            int custId = username == "user" ? 1 : username == "dinh" ? 2 : 0;
+            // SỬA: Lấy ID trực tiếp từ Token
+            int custId = GetCurrentCustomerId();
             if (custId == 0) return Unauthorized();
+
             var orders = await _db.Orders.Where(o => o.CustomerId == custId).Include(o => o.OrderDetails).ToListAsync();
             return Ok(orders);
         }
@@ -44,13 +56,14 @@ namespace nhom5BackEnd.Controllers
         public async Task<IActionResult> Create([FromBody] OrderCreateDto dto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
-            var username = User.FindFirstValue(ClaimTypes.Name);
-            int custId = username == "user" ? 1 : username == "dinh" ? 2 : 0;
+
+            // SỬA: Lấy ID trực tiếp từ Token
+            int custId = GetCurrentCustomerId();
             if (custId == 0) return Unauthorized();
 
             if (dto.Items == null || !dto.Items.Any()) return BadRequest("Order must contain items");
 
-            // Validate items and calculate total
+            // Logic tính toán giữ nguyên
             decimal total = 0m;
             var order = new Order { CustomerId = custId, CreatedAt = DateTime.UtcNow, Status = "New" };
             foreach (var item in dto.Items)
@@ -59,10 +72,12 @@ namespace nhom5BackEnd.Controllers
                 var product = await _db.Products.FindAsync(item.ProductId);
                 if (product == null) return BadRequest($"Product {item.ProductId} not found");
                 if (product.Stock < item.Quantity) return BadRequest($"Insufficient stock for product {product.Id}");
+                
                 var od = new OrderDetail { ProductId = product.Id, Quantity = item.Quantity, UnitPrice = item.UnitPrice };
                 order.OrderDetails.Add(od);
                 total += item.UnitPrice * item.Quantity;
-                // reduce stock
+                
+                // Trừ tồn kho
                 product.Stock -= item.Quantity;
             }
 

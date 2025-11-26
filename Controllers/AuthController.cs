@@ -1,3 +1,4 @@
+// --- AuthController.cs ---
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -30,6 +31,7 @@ namespace nhom5BackEnd.Controllers
         private static (string Username, string Role, int CustomerId)? ValidateUser(string username, string password)
         {
             // QUAN TRỌNG: User ID = 1, Admin ID = 2
+            // Lưu ý: Username trả về ở đây sẽ được lưu vào Token
             if (username == "admin@admin.com" && password == "admin") return ("Admin User", "Admin", 2);
             if (username == "user@user.com" && password == "user") return ("Normal User", "User", 1);
             return null;
@@ -37,23 +39,22 @@ namespace nhom5BackEnd.Controllers
 
         private string GenerateToken(string username, string role, int customerId)
         {
-            // KEY CỐ ĐỊNH - PHẢI GIỐNG Y CHANG BÊN PROGRAM.CS
             var keyString = "DayLaMotCaiKeyRatLaBiMatVaRatLaDai2024!@#1234567890";
             var key = Encoding.UTF8.GetBytes(keyString);
 
             var claims = new List<Claim>
             {
-                new Claim(JwtRegisteredClaimNames.Sub, username),
-                new Claim(ClaimTypes.Name, username),
-                new Claim(ClaimTypes.Role, role),
-                // Sửa lỗi: Chỉ giữ lại 1 dòng này và đảm bảo cú pháp đúng
+                // SỬA Ở ĐÂY: Dùng chuỗi thường thay vì ClaimTypes dài ngoằng
+                // Để khớp với cấu hình trong Program.cs
+                new Claim("unique_name", username), 
+                new Claim("role", role),
                 new Claim("CustomerId", customerId.ToString()) 
             };
 
             var creds = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256);
             var token = new JwtSecurityToken(
-                issuer: "nhom5BackEnd",      // Cố định cứng
-                audience: "nhom5FrontEnd",   // Cố định cứng
+                issuer: "nhom5BackEnd",      
+                audience: "nhom5FrontEnd",   
                 claims: claims,
                 expires: DateTime.UtcNow.AddHours(6),
                 signingCredentials: creds

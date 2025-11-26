@@ -62,18 +62,17 @@ const attachLoginEvents = () => {
             }
 
             const data = await response.json();
-            const decodedPayload = decodeJwt(data.token); // SỬ DỤNG HÀM TỰ GIẢI MÃ
+            const decodedPayload = decodeJwt(data.token); 
 
             if (decodedPayload) {
-                // Lấy Claims từ JWT Payload (đảm bảo khớp với cách AuthController.cs tạo claims)
-                const role = decodedPayload["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"]; 
-                const name = decodedPayload["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"]; 
+                const role = decodedPayload["role"];          // Mới
+                const name = decodedPayload["unique_name"];   // Mới
                 const customerId = decodedPayload["CustomerId"]; 
 
                 app.currentUser = { 
-                    name: name, 
-                    role: role, 
-                    customerId: parseInt(customerId) 
+                  name: name, 
+                  role: role, 
+                  customerId: parseInt(customerId) 
                 };
                 app.token = data.token;
                 app.currentPage = role === 'Admin' ? 'products' : 'order';
