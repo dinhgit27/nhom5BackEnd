@@ -1,94 +1,104 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.FileProviders;
-using System.IO;
+using Microsoft.IdentityModel.Tokens;
+using nhom5BackEnd.Models;
 using nhom5BackEnd.Data;
+using System.Text;
+
 var builder = WebApplication.CreateBuilder(args);
 
+// =================== TẤT CẢ SERVICES ĐẶT TRƯỚC builder.Build() ==================
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection") 
-        ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.")));
 
-builder.Configuration["Jwt:Key"] ??= "very_secret_key_please_change";
-builder.Configuration["Jwt:Issuer"] ??= "nhom5BackEnd";
-builder.Configuration["Jwt:Audience"] ??= "nhom5BackEndUsers";
+// Cấu hình DbContext: Development dùng InMemory, Production dùng SQL Server
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddDbContext<AppDbContext>(options =>
+        options.UseInMemoryDatabase("Nhom5Db"));
+}
+else
+{
+    builder.Services.AddDbContext<AppDbContext>(options =>
+        options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")
+            ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.")));
+}
 
-var key = System.Text.Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]);
+// JWT Configuration
+var jwtKey = builder.Configuration["Jwt:Key"] ?? "DayLaMotCaiKeyRatLaBiMatVaRatLaDai2024!@#1234567890";
+var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "nhom5BackEnd";
+var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "nhom5BackEndUsers";
+
+var key = Encoding.UTF8.GetBytes(jwtKey);
+
 builder.Services.AddAuthentication(options =>
 {
-    options.DefaultAuthenticateScheme = Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 })
-    .AddJwtBearer(options =>
+.AddJwtBearer(options =>
+{
+    options.RequireHttpsMetadata = false;
+    options.SaveToken = true;
+    options.TokenValidationParameters = new TokenValidationParameters
     {
-        options.RequireHttpsMetadata = false;
-        options.SaveToken = true;
-        options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
-            ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(key),
-        };
-    });
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtIssuer,
+        ValidAudience = jwtAudience,
+        IssuerSigningKey = new SymmetricSecurityKey(key)
+    };
+});
 
 builder.Services.AddAuthorization();
 
+// CORS (cho frontend localhost)
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", p =>
+        p.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
+});
+// ===============================================================================
+
 var app = builder.Build();
+
+// Seed data (chỉ chạy khi dùng InMemory)
 if (app.Environment.IsDevelopment())
 {
-    // Override lại DbContext để dùng InMemory chỉ khi chạy app (không ảnh hưởng migration)
-    builder.Services.AddDbContext<AppDbContext>(options =>
-        options.UseInMemoryDatabase("AppDb"));
-}
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<nhom5BackEnd.Data.AppDbContext>();
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
     if (!db.Products.Any())
     {
         db.Products.AddRange(
-            new nhom5BackEnd.Models.Product { Name = "Widget A", Price = 10.5m, Description = "Sample A", Stock = 100 },
-            new nhom5BackEnd.Models.Product { Name = "Widget B", Price = 20m, Description = "Sample B", Stock = 50 }
+            new Product { Name = "banh ngot", Price = 13000, Description = "ngot", Stock = 100 },
+            new Product { Name = "mi", Price = 10000, Description = "ngon", Stock = 50 }
         );
     }
     if (!db.Customers.Any())
     {
         db.Customers.AddRange(
-            new nhom5BackEnd.Models.Customer { Name = "User Customer", Email = "user@example.com" },
-            new nhom5BackEnd.Models.Customer { Name = "Admin Customer", Email = "admin@example.com" }
+            new Customer { Name = "user", Email = "user@gmail.com", Phone = "0901234567" },
+            new Customer { Name = "Admin", Email = "admin@gmail.com", Phone = "0909999999" }
         );
     }
     db.SaveChanges();
 }
+
+// Pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-var servicesPath = Path.Combine(app.Environment.ContentRootPath, "services");
-if (Directory.Exists(servicesPath))
-{
-    app.UseStaticFiles(new StaticFileOptions
-    {
-        FileProvider = new PhysicalFileProvider(servicesPath),
-        RequestPath = "/services"
-    });
-
-    // Redirect root to the services index if it exists
-    app.MapGet("/", () => Results.Redirect("/services/index.html"));
-}
 
 app.UseHttpsRedirection();
-
+app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();

@@ -1,1 +1,11 @@
-{"Version":1,"Hash":"1Nb8ar7bekHekUN1WNFcIPJQ4ceIs8DjqZKBrSahfbY=","Source":"nhom5backend","BasePath":"_content/nhom5backend","Mode":"Default","ManifestType":"Build","ReferencedProjectsConfiguration":[],"DiscoveryPatterns":[],"Assets":[],"Endpoints":[]}
+{
+  "Version": 1,
+  "Hash": "F68FtHfkpEzg4TVsgbLW6jsaR4epMXHZx5o9eBW9AwY=",
+  "Source": "nhom5backend",
+  "BasePath": "_content/nhom5backend",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}
