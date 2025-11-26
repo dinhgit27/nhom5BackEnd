@@ -1,94 +1,81 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using nhom5BackEnd.Models;
 using nhom5BackEnd.Data;
 using System.Text;
+using System.IdentityModel.Tokens.Jwt; // <-- Cần thêm dòng này
 
 var builder = WebApplication.CreateBuilder(args);
 
-// =================== TẤT CẢ SERVICES ĐẶT TRƯỚC builder.Build() ==================
+// --- 1. CHẶN .NET TỰ ĐỘNG ĐỔI TÊN CLAIM (Magic Fix) ---
+JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Cấu hình DbContext: Development dùng InMemory, Production dùng SQL Server
-if (builder.Environment.IsDevelopment())
-{
-    builder.Services.AddDbContext<AppDbContext>(options =>
-        options.UseInMemoryDatabase("Nhom5Db"));
-}
-else
-{
-    builder.Services.AddDbContext<AppDbContext>(options =>
-        options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")
-            ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.")));
-}
+// Cấu hình DB
+builder.Services.AddDbContext<AppDbContext>(options => options.UseInMemoryDatabase("Nhom5Db"));
 
-// JWT Configuration
-var jwtKey = builder.Configuration["Jwt:Key"] ?? "DayLaMotCaiKeyRatLaBiMatVaRatLaDai2024!@#1234567890";
-var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "nhom5BackEnd";
-var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "nhom5BackEndUsers";
-
+// Cấu hình JWT
+var jwtKey = "DayLaMotCaiKeyRatLaBiMatVaRatLaDai2024!@#1234567890";
 var key = Encoding.UTF8.GetBytes(jwtKey);
 
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-    options.RequireHttpsMetadata = false;
-    options.SaveToken = true;
-    options.TokenValidationParameters = new TokenValidationParameters
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
     {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = jwtIssuer,
-        ValidAudience = jwtAudience,
-        IssuerSigningKey = new SymmetricSecurityKey(key)
-    };
-});
+        options.RequireHttpsMetadata = false;
+        options.SaveToken = true;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = "nhom5BackEnd",
+            ValidAudience = "nhom5FrontEnd",
+            IssuerSigningKey = new SymmetricSecurityKey(key),
+            ClockSkew = TimeSpan.Zero,
+            
+            // Quan trọng: Giữ nguyên tên Claim
+            RoleClaimType = "role",
+            NameClaimType = "unique_name" 
+        };
+    });
 
 builder.Services.AddAuthorization();
 
-// CORS (cho frontend localhost)
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", p =>
-        p.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
+    options.AddPolicy("AllowAll", p => p.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
 });
-// ===============================================================================
 
 var app = builder.Build();
 
-// Seed data (chỉ chạy khi dùng InMemory)
-if (app.Environment.IsDevelopment())
+// Seed Data
+using (var scope = app.Services.CreateScope())
 {
-    using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
+    db.Database.EnsureCreated();
+    
     if (!db.Products.Any())
     {
         db.Products.AddRange(
-            new Product { Name = "banh ngot", Price = 13000, Description = "ngot", Stock = 100 },
-            new Product { Name = "mi", Price = 10000, Description = "ngon", Stock = 50 }
+            new nhom5BackEnd.Models.Product { Name = "Bánh ngọt", Price = 15000, Description = "Ngon", Stock = 100 },
+            new nhom5BackEnd.Models.Product { Name = "Mì tôm", Price = 5000, Description = "Cay", Stock = 50 }
         );
     }
+    // Tạo User mẫu để test đặt hàng
     if (!db.Customers.Any())
     {
         db.Customers.AddRange(
-            new Customer { Name = "user", Email = "user@gmail.com", Phone = "0901234567" },
-            new Customer { Name = "Admin", Email = "admin@gmail.com", Phone = "0909999999" }
+            new nhom5BackEnd.Models.Customer { Id = 1, Name = "User Demo", Email = "user@user.com", Address = "VN", Phone = "123" },
+            new nhom5BackEnd.Models.Customer { Id = 2, Name = "Admin Demo", Email = "admin@admin.com", Address = "VN", Phone = "456" }
         );
     }
     db.SaveChanges();
 }
 
-// Pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

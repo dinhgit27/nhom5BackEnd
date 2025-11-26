@@ -1,5 +1,8 @@
+// ==================== RENDERING UI ====================
+
 const renderProductManagementPage = () => {
-    if (app.currentUser?.role !== 'Admin') {
+    // 1. Kiểm tra quyền Admin
+    if (!app.currentUser || app.currentUser.role !== 'Admin') {
         document.getElementById('main-content').innerHTML = `
             <div class="access-denied">
                 <div class="access-denied-box">
@@ -12,6 +15,7 @@ const renderProductManagementPage = () => {
         return;
     }
 
+    // 2. Render khung trang quản lý
     document.getElementById('main-content').innerHTML = `
         <div class="products-header">
             <h2>Quản Lý Sản Phẩm</h2>
@@ -75,29 +79,36 @@ const renderProductManagementPage = () => {
         </div>
     `;
 
+    // 3. Render dữ liệu bảng và Gắn sự kiện
     renderProductsTable();
-    attachProductManagementEvents();
+    attachProductManagementEvents(); 
 };
 
 const renderProductsTable = () => {
     const tbody = document.getElementById('products-tbody');
+    if (!tbody) return;
+
+    if (!app.products || app.products.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center">Chưa có sản phẩm nào.</td></tr>';
+        return;
+    }
+
     tbody.innerHTML = app.products.map(product => `
         <tr>
-            <td>${product.ProductId}</td>
-            <td>${product.ProductName}</td>
-            <td class="product-price">${product.Price.toLocaleString('vi-VN')}đ</td>
-            <td>${product.Description}</td>
+            <td>${product.id || product.productId}</td> <td>${product.name || product.productName}</td>
+            <td class="product-price">${(product.price || 0).toLocaleString('vi-VN')}đ</td>
+            <td>${product.description || ''}</td>
             <td>
-                <span class="stock-badge ${product.Stock > 50 ? 'stock-high' : product.Stock > 20 ? 'stock-medium' : 'stock-low'}">
-                    ${product.Stock}
+                <span class="stock-badge ${product.stock > 50 ? 'stock-high' : product.stock > 20 ? 'stock-medium' : 'stock-low'}">
+                    ${product.stock}
                 </span>
             </td>
             <td>
                 <div class="action-buttons">
-                    <button class="edit-btn" onclick="editProduct(${product.ProductId})">
+                    <button class="edit-btn" onclick="editProduct(${product.id || product.productId})">
                         <i class="fas fa-edit"></i>
                     </button>
-                    <button class="delete-btn" onclick="deleteProduct(${product.ProductId})">
+                    <button class="delete-btn" onclick="deleteProduct(${product.id || product.productId})">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
@@ -106,17 +117,23 @@ const renderProductsTable = () => {
     `).join('');
 };
 
+// ==================== EVENTS & LOGIC ====================
+
 const attachProductManagementEvents = () => {
     const addBtn = document.getElementById('add-product-btn');
     const closeBtn = document.getElementById('close-modal');
     const cancelBtn = document.getElementById('cancel-btn');
     const form = document.getElementById('product-form');
-    const modal = document.getElementById('product-modal');
-
-    addBtn.addEventListener('click', () => openProductModal());
-    closeBtn.addEventListener('click', () => closeProductModal());
-    cancelBtn.addEventListener('click', () => closeProductModal());
-    form.addEventListener('submit', (e) => {
+    
+    // Gắn sự kiện Click cho nút Thêm
+    if (addBtn) addBtn.addEventListener('click', () => openProductModal());
+    
+    // Gắn sự kiện đóng Modal
+    if (closeBtn) closeBtn.addEventListener('click', () => closeProductModal());
+    if (cancelBtn) cancelBtn.addEventListener('click', () => closeProductModal());
+    
+    // Gắn sự kiện Submit Form
+    if (form) form.addEventListener('submit', (e) => {
         e.preventDefault();
         saveProduct();
     });
@@ -125,16 +142,21 @@ const attachProductManagementEvents = () => {
 const openProductModal = (productId = null) => {
     const modal = document.getElementById('product-modal');
     const title = document.getElementById('modal-title');
-
+    
     if (productId) {
-        const product = app.products.find(p => p.ProductId === productId);
+        // Chế độ Sửa
+        // Tìm sản phẩm (chấp nhận cả Id hoa và thường do sự khác biệt giữa JSON BE và JS FE)
+        const product = app.products.find(p => (p.id === productId || p.productId === productId));
+        if (!product) return;
+
         app.editingProduct = product;
         title.textContent = 'Sửa Sản Phẩm';
-        document.getElementById('product-name').value = product.ProductName;
-        document.getElementById('product-price').value = product.Price;
-        document.getElementById('product-description').value = product.Description;
-        document.getElementById('product-stock').value = product.Stock;
+        document.getElementById('product-name').value = product.name || product.productName;
+        document.getElementById('product-price').value = product.price;
+        document.getElementById('product-description').value = product.description || '';
+        document.getElementById('product-stock').value = product.stock;
     } else {
+        // Chế độ Thêm mới
         app.editingProduct = null;
         title.textContent = 'Thêm Sản Phẩm';
         document.getElementById('product-form').reset();
@@ -144,59 +166,76 @@ const openProductModal = (productId = null) => {
 };
 
 const closeProductModal = () => {
-    document.getElementById('product-modal').classList.remove('show');
+    const modal = document.getElementById('product-modal');
+    if (modal) modal.classList.remove('show');
     app.editingProduct = null;
 };
 
-const saveProduct = () => {
+// ==================== API ACTIONS ====================
+
+const saveProduct = async () => {
     const name = document.getElementById('product-name').value.trim();
     const price = parseFloat(document.getElementById('product-price').value);
     const description = document.getElementById('product-description').value.trim();
     const stock = parseInt(document.getElementById('product-stock').value);
 
-    if (!name || !price || stock === '') {
-        alert('Vui lòng nhập đầy đủ thông tin!');
+    if (!name || isNaN(price) || isNaN(stock)) {
+        alert('Vui lòng nhập đầy đủ và đúng định dạng!');
         return;
     }
 
-    if (price < 0) {
-        alert('Giá sản phẩm phải >= 0');
-        return;
-    }
+    const productDto = {
+        name: name,
+        price: price,
+        description: description,
+        stock: stock
+    };
 
-    if (stock < 0) {
-        alert('Tồn kho phải >= 0');
-        return;
-    }
-
+    let response;
+    
+    // Kiểm tra xem đang Sửa hay Thêm mới
+    // Lưu ý: app.editingProduct có thể có 'id' hoặc 'productId' tùy vào dữ liệu API trả về
     if (app.editingProduct) {
-        app.editingProduct.ProductName = name;
-        app.editingProduct.Price = price;
-        app.editingProduct.Description = description;
-        app.editingProduct.Stock = stock;
+        const idToUpdate = app.editingProduct.id || app.editingProduct.productId;
+        // GỌI API PUT
+        response = await fetchWithAuth(`/products/${idToUpdate}`, {
+            method: 'PUT',
+            body: JSON.stringify(productDto)
+        });
     } else {
-        const newProduct = {
-            ProductId: Math.max(...app.products.map(p => p.ProductId)) + 1,
-            ProductName: name,
-            Price: price,
-            Description: description,
-            Stock: stock,
-            CategoryId: 1
-        };
-        app.products.push(newProduct);
+        // GỌI API POST
+        response = await fetchWithAuth('/products', {
+            method: 'POST',
+            body: JSON.stringify(productDto)
+        });
     }
 
-    closeProductModal();
-    renderProductsTable();
+    if (response && response.ok) {
+        closeProductModal();
+        // Reload lại dữ liệu bảng
+        await fetchAdminProductsAndRender(); 
+    } else {
+        const errorText = response ? await response.text() : "Lỗi kết nối";
+        alert('Lỗi lưu sản phẩm: ' + errorText);
+    }
 };
 
-const editProduct = (productId) => {
-    openProductModal(productId);
-};
+// Hàm này cần được gọi từ window object vì nó được gắn vào onclick HTML string
+window.editProduct = (id) => {
+    openProductModal(id);
+}
 
-const deleteProduct = (productId) => {
+// Hàm này cần được gọi từ window object
+window.deleteProduct = async (id) => {
     if (confirm('Bạn có chắc muốn xóa sản phẩm này?')) {
-        app.products = app.products.filter(p => p.ProductId !== productId);
-        renderProductsTable();
+        const response = await fetchWithAuth(`/products/${id}`, {
+            method: 'DELETE'
+        });
+
+        if (response && response.ok) {
+            await fetchAdminProductsAndRender();
+        } else {
+            alert('Không thể xóa sản phẩm. Có thể sản phẩm đã có đơn hàng.');
+        }
     }
-};
+}

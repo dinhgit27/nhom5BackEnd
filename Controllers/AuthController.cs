@@ -11,47 +11,49 @@ namespace nhom5BackEnd.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IConfiguration _config;
-
-        public AuthController(IConfiguration config)
-        {
-            _config = config;
-        }
+        public AuthController(IConfiguration config) { _config = config; }
 
         [HttpPost("login")]
         public IActionResult Login([FromBody] LoginRequest req)
         {
             if (string.IsNullOrEmpty(req.Username) || string.IsNullOrEmpty(req.Password))
-                return BadRequest("Username and password required");
+                return BadRequest("Cần nhập username và password");
 
-            // Very simple hard-coded users for demo purposes
             var user = ValidateUser(req.Username, req.Password);
-            if (user == null) return Unauthorized();
+            if (user == null) return Unauthorized("Sai tài khoản hoặc mật khẩu");
 
-            var token = GenerateToken(user.Value.Username, user.Value.Role);
+            // Truyền đủ 3 tham số: Username, Role, CustomerId
+            var token = GenerateToken(user.Value.Username, user.Value.Role, user.Value.CustomerId);
             return Ok(new { token });
         }
 
-        private static (string Username, string Role)? ValidateUser(string username, string password)
+        private static (string Username, string Role, int CustomerId)? ValidateUser(string username, string password)
         {
-            // Demo hard-coded users
-            if (username == "dinh" && password == "123") return ("dinh", "Admin");
-            if (username == "tuan" && password == "321") return ("tuan", "User");
+            // QUAN TRỌNG: User ID = 1, Admin ID = 2
+            if (username == "admin@admin.com" && password == "admin") return ("Admin User", "Admin", 2);
+            if (username == "user@user.com" && password == "user") return ("Normal User", "User", 1);
             return null;
         }
 
-        private string GenerateToken(string username, string role)
+        private string GenerateToken(string username, string role, int customerId)
         {
-            var key = Encoding.UTF8.GetBytes(_config["Jwt:Key"] ?? "very_secret_key_please_change");
-            var claims = new[] {
+            // KEY CỐ ĐỊNH - PHẢI GIỐNG Y CHANG BÊN PROGRAM.CS
+            var keyString = "DayLaMotCaiKeyRatLaBiMatVaRatLaDai2024!@#1234567890";
+            var key = Encoding.UTF8.GetBytes(keyString);
+
+            var claims = new List<Claim>
+            {
                 new Claim(JwtRegisteredClaimNames.Sub, username),
                 new Claim(ClaimTypes.Name, username),
-                new Claim(ClaimTypes.Role, role)
+                new Claim(ClaimTypes.Role, role),
+                // Sửa lỗi: Chỉ giữ lại 1 dòng này và đảm bảo cú pháp đúng
+                new Claim("CustomerId", customerId.ToString()) 
             };
 
             var creds = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256);
             var token = new JwtSecurityToken(
-                issuer: _config["Jwt:Issuer"],
-                audience: _config["Jwt:Audience"],
+                issuer: "nhom5BackEnd",      // Cố định cứng
+                audience: "nhom5FrontEnd",   // Cố định cứng
                 claims: claims,
                 expires: DateTime.UtcNow.AddHours(6),
                 signingCredentials: creds

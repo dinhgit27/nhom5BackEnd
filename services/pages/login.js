@@ -40,27 +40,53 @@ const attachLoginEvents = () => {
     const passwordInput = document.getElementById('login-password');
     const errorMsg = document.getElementById('error-message');
 
-    loginBtn.addEventListener('click', () => {
-        const email = emailInput.value.trim();
+    loginBtn.addEventListener('click', async () => {
+        const username = emailInput.value.trim(); 
         const password = passwordInput.value.trim();
 
-        if (!email || !password) {
+        if (!username || !password) {
             showError(errorMsg, 'Vui lòng nhập đầy đủ thông tin!');
             return;
         }
 
-        if (email === 'admin@admin.com' && password === 'admin') {
-            app.currentUser = { email, role: 'Admin', name: 'Admin User' };
-            app.token = 'mock-jwt-token-admin';
-            app.currentPage = 'products';
-            renderPage();
-        } else if (email === 'user@user.com' && password === 'user') {
-            app.currentUser = { email, role: 'User', name: 'Normal User', customerId: 1 };
-            app.token = 'mock-jwt-token-user';
-            app.currentPage = 'order';
-            renderPage();
-        } else {
-            showError(errorMsg, 'Email hoặc mật khẩu không đúng!');
+        try {
+            const response = await fetch(app.apiBase + '/Auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+
+            if (!response.ok) {
+                showError(errorMsg, 'Email hoặc mật khẩu không đúng!');
+                return;
+            }
+
+            const data = await response.json();
+            const decodedPayload = decodeJwt(data.token); // SỬ DỤNG HÀM TỰ GIẢI MÃ
+
+            if (decodedPayload) {
+                // Lấy Claims từ JWT Payload (đảm bảo khớp với cách AuthController.cs tạo claims)
+                const role = decodedPayload["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"]; 
+                const name = decodedPayload["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"]; 
+                const customerId = decodedPayload["CustomerId"]; 
+
+                app.currentUser = { 
+                    name: name, 
+                    role: role, 
+                    customerId: parseInt(customerId) 
+                };
+                app.token = data.token;
+                app.currentPage = role === 'Admin' ? 'products' : 'order';
+                
+                await fetchInitialData(); // Cập nhật lại data (Product, Order...)
+                renderPage();
+            } else {
+                showError(errorMsg, 'Lỗi giải mã token từ server!');
+            }
+
+        } catch (e) {
+            console.error("Lỗi đăng nhập:", e);
+            showError(errorMsg, 'Lỗi kết nối đến server API!');
         }
     });
 
@@ -70,6 +96,7 @@ const attachLoginEvents = () => {
 };
 
 const showError = (element, message) => {
+    // ... (giữ nguyên)
     element.textContent = message;
     element.classList.remove('hidden');
     setTimeout(() => {
