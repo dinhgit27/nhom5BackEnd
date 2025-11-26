@@ -2,18 +2,16 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using System.IO;
-
+using nhom5BackEnd.Data;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection") 
+        ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.")));
 
-// Add InMemory EF Core
-builder.Services.AddDbContext<nhom5BackEnd.Data.AppDbContext>(opt =>
-    opt.UseInMemoryDatabase("AppDb"));
-
-// JWT configuration
 builder.Configuration["Jwt:Key"] ??= "very_secret_key_please_change";
 builder.Configuration["Jwt:Issuer"] ??= "nhom5BackEnd";
 builder.Configuration["Jwt:Audience"] ??= "nhom5BackEndUsers";
@@ -43,8 +41,12 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
-
-// Seed demo data
+if (app.Environment.IsDevelopment())
+{
+    // Override lại DbContext để dùng InMemory chỉ khi chạy app (không ảnh hưởng migration)
+    builder.Services.AddDbContext<AppDbContext>(options =>
+        options.UseInMemoryDatabase("AppDb"));
+}
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<nhom5BackEnd.Data.AppDbContext>();
@@ -64,15 +66,11 @@ using (var scope = app.Services.CreateScope())
     }
     db.SaveChanges();
 }
-
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
-// Serve static files from the "services" folder at the /services path
 var servicesPath = Path.Combine(app.Environment.ContentRootPath, "services");
 if (Directory.Exists(servicesPath))
 {
