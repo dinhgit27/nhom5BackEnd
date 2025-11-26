@@ -56,9 +56,12 @@ const renderPage = () => {
         } else if (app.currentPage === 'order-details') {
             renderOrderDetailsPage();
         } 
-        // --- THÊM TRANG QUẢN LÝ ĐƠN HÀNG CHO ADMIN ---
+        // --- THÊM 2 DÒNG NÀY ---
+        else if (app.currentPage === 'my-history') {
+            renderOrderHistoryPage(); // Hàm này sẽ viết ở orders.js
+        }
         else if (app.currentPage === 'admin-orders') {
-            renderAdminOrdersPage(); // Hàm này sẽ viết ở bước 4
+            renderAdminOrdersPage();  // Hàm này sẽ viết ở orders.js
         }
     }
 };
