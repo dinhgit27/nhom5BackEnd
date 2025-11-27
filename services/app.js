@@ -11,7 +11,7 @@ const app = {
     lastOrderId: null,
     editingProduct: null,
     // THÊM BASE URL CHO API CỦA BẠN (Kiểm tra file launchSettings.json)
-    apiBase: 'https://localhost:7030/api' // Đảm bảo đúng cổng!
+    apiBase: 'http://api.nhom5.com/api' // Đảm bảo đúng cổng!
 };
 
 // ==================== Utility Functions (DECODE JWT) ====================
