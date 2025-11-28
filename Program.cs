@@ -15,7 +15,8 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // Cấu hình DB
-builder.Services.AddDbContext<AppDbContext>(options => options.UseInMemoryDatabase("Nhom5Db"));
+builder.Services.AddDbContext<AppDbContext>(options =>
+ options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Cấu hình JWT
 var jwtKey = "DayLaMotCaiKeyRatLaBiMatVaRatLaDai2024!@#1234567890";
@@ -57,14 +58,14 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.EnsureCreated();
     
-    if (!db.Products.Any())
-    {
-        db.Products.AddRange(
-            new nhom5BackEnd.Models.Product { Name = "Bánh ngọt", Price = 15000, Description = "Ngon", Stock = 100 },
-            new nhom5BackEnd.Models.Product { Name = "Mì tôm", Price = 5000, Description = "Cay", Stock = 50 }
-        );
-    }
-    db.SaveChanges();
+    //if (!db.Products.Any())
+   // {
+       // db.Products.AddRange(
+        //    new nhom5BackEnd.Models.Product { Name = "Bánh ngọt", Price = 15000, Description = "Ngon", Stock = 100 },
+      //      new nhom5BackEnd.Models.Product { Name = "Mì tôm", Price = 5000, Description = "Cay", Stock = 50 }
+       // );
+  //  }
+    //db.SaveChanges();
 }
 
 app.UseSwagger();
