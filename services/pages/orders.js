@@ -213,32 +213,25 @@ const getStatusClass = (status) => {
 // Hàm Xem Chi Tiết (Dùng chung cho cả Admin và User)
 // Quan trọng: Gắn vào window để HTML gọi được
 window.viewOrderDetail = async (orderId) => {
-    // 1. Lưu ID đơn hàng muốn xem
     app.lastOrderId = orderId;
 
-    // 2. Fetch dữ liệu chi tiết đơn hàng đó từ API (để đảm bảo có dữ liệu OrderDetails)
-    //    Admin dùng API /orders, User dùng /orders/my (hoặc user có thể dùng /orders/{id} nếu backend hỗ trợ check owner)
-    //    Cách đơn giản nhất: Lấy lại list orders hiện tại trong app (nếu đã fetch) hoặc fetch lại.
-    
-    // Ở đây ta dùng cách đơn giản: Chuyển trang và để trang OrderDetail tự lo việc hiển thị
-    // Tuy nhiên, logic cũ của OrderDetail là lấy từ app.orders. 
-    // Nên ta cần đảm bảo app.orders có chứa đơn hàng này.
-    
-    // Nếu đang ở trang Admin, app.orders có thể chưa được set (vì ta fetch cục bộ trong hàm render).
-    // => Ta sẽ fetch lại data cho chắc chắn.
-    
     try {
-        // Tự động chọn API dựa trên Role
-        const url = app.currentUser.role === 'Admin' ? '/orders' : '/orders/my';
+        const url = app.currentUser.role === 'Admin' ? '/Orders' : '/Orders/my';  // Sửa uppercase O cho khớp controller
         const res = await fetchWithAuth(url);
-        if(res.ok) {
+        if (res.ok) {
             app.orders = await res.json();
-            app.currentPage = 'order-details';
-            renderPage();
+        } else {
+            console.error('Lỗi fetch orders:', res.status, await res.text());  // THÊM LOG NÀY ĐỂ DEBUG
+            alert('Không tải được đơn hàng. Kiểm tra backend!');
         }
     } catch (e) {
-        alert("Không thể tải chi tiết đơn hàng");
+        console.error('Fetch error:', e);
+        alert('Lỗi kết nối API!');
     }
+
+    // Fallback: Nếu không fetch được, dùng data cũ nếu có
+    app.currentPage = 'order-details';
+    renderPage();
 };
 
 // Các hàm xử lý giỏ hàng (Giữ nguyên như cũ)

@@ -4,6 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using nhom5BackEnd.Data;
 using System.Text;
 using System.IdentityModel.Tokens.Jwt; // <-- Cần thêm dòng này
+using nhom5BackEnd.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
