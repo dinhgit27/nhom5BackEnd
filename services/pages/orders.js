@@ -251,8 +251,15 @@ window.addToCart = (id) => { /* Code cũ... */
          if (existing.quantity < (product.stock || product.Stock)) existing.quantity++;
          else alert('Hết hàng trong kho');
     } else {
-        app.cart.push({ id: id, name: product.name || product.ProductName, price: product.price || product.Price, quantity: 1 });
-    }
+    // Sửa lại dòng lấy name và price để bao quát hết các trường hợp
+    app.cart.push({ 
+        id: id, 
+        // Thêm product.productName vào đầu tiên
+        name: product.productName || product.name || product.ProductName || "Sản phẩm", 
+        price: product.price || product.Price || 0, 
+        quantity: 1 
+    });
+}
     renderCart();
 }; 
 

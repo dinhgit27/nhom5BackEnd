@@ -10,11 +10,10 @@ const app = {
     cart: [],
     lastOrderId: null,
     editingProduct: null,
-    // THÊM BASE URL CHO API CỦA BẠN (Kiểm tra file launchSettings.json)
-    apiBase: 'https://localhost:7030/api'//'http://api.nhom5.com/api' // Đảm bảo đúng cổng!
+
+    apiBase: 'https://localhost:7030/api'//'http://api.nhom5.com/api' 
 };
 
-// ==================== Utility Functions (DECODE JWT) ====================
 const decodeJwt = (token) => {
     try {
         const base64Url = token.split('.')[1];
@@ -30,7 +29,6 @@ const decodeJwt = (token) => {
     }
 };
 
-// ==================== Page Rendering (Giữ nguyên) ====================
 const showPage = (page) => {
     app.currentPage = page;
     renderPage();
