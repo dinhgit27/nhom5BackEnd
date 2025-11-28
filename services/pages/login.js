@@ -24,6 +24,11 @@ const renderLoginPage = () => {
 
                 <button class="login-btn" id="login-btn">Đăng Nhập</button>
 
+                <div class="signup-link" style="margin-top:12px; text-align:center;">
+                    <span>Bạn chưa có tài khoản?</span>
+                    <button id="to-register-btn" class="link-btn" style="margin-left:8px;">Đăng ký</button>
+                </div>
+
                 <div class="demo-info">
                     <p class="title">Tài khoản demo:</p>
                     <p>Admin: admin@admin.com / admin</p>
@@ -92,6 +97,14 @@ const attachLoginEvents = () => {
     passwordInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') loginBtn.click();
     });
+
+    // Chuyển sang giao diện đăng ký nếu người dùng nhấp
+    const toRegisterBtn = document.getElementById('to-register-btn');
+    if (toRegisterBtn) {
+        toRegisterBtn.addEventListener('click', () => {
+            showPage('register');
+        });
+    }
 };
 
 const showError = (element, message) => {

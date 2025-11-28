@@ -57,20 +57,25 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.EnsureCreated();
-    
-    //if (!db.Products.Any())
-   // {
-       // db.Products.AddRange(
-        //    new nhom5BackEnd.Models.Product { Name = "Bánh ngọt", Price = 15000, Description = "Ngon", Stock = 100 },
-      //      new nhom5BackEnd.Models.Product { Name = "Mì tôm", Price = 5000, Description = "Cay", Stock = 50 }
-       // );
-  //  }
-    //db.SaveChanges();
 }
 
 app.UseSwagger();
 app.UseSwaggerUI();
 
+// Serve static files from 'services' folder
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(
+        Path.Combine(app.Environment.ContentRootPath, "services")),
+    RequestPath = ""
+});
+
+// Default route to index.html
+app.MapGet("/", context =>
+{
+    context.Response.ContentType = "text/html";
+    return context.Response.SendFileAsync(Path.Combine(app.Environment.ContentRootPath, "services", "index.html"));
+});
 
 app.UseHttpsRedirection();
 app.UseCors("AllowAll");
