@@ -38,8 +38,13 @@ const renderPage = () => {
     const appElement = document.getElementById('app');
     
     if (!app.token) {
-        appElement.innerHTML = renderLoginPage();
-        attachLoginEvents();
+        if (app.currentPage === 'register') {
+            appElement.innerHTML = renderRegisterPage();
+            attachRegisterEvents();
+        } else {
+            appElement.innerHTML = renderLoginPage();
+            attachLoginEvents();
+        }
     } else {
         appElement.innerHTML = renderLayout();
         attachNavbarEvents();

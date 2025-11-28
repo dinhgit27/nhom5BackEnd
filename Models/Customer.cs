@@ -15,5 +15,8 @@ namespace nhom5BackEnd.Models
         public string? Phone { get; set; }
 
         public string? Address { get; set; }
+
+        // Lưu password hash để xác thực người dùng
+        public string? PasswordHash { get; set; }
     }
 }
