@@ -120,7 +120,6 @@ C:\Users\ASUS\nhom5BackEnd\obj\Debug\net6.0\staticwebassets.build.endpoints.json
 C:\Users\ASUS\nhom5BackEnd\obj\Debug\net6.0\nhom5bac.31AD6580.Up2Date
 C:\Users\ASUS\nhom5BackEnd\obj\Debug\net6.0\nhom5backend.genruntimeconfig.cache
 C:\Users\ASUS\nhom5BackEnd\obj\Debug\net6.0\ref\nhom5backend.dll
-C:\Users\Administrator\Downloads\nhom5BackEnd\bin\Debug\net6.0\ref\nhom5backend.dll
 C:\Users\Administrator\Downloads\nhom5BackEnd\bin\Debug\net6.0\Humanizer.dll
 C:\Users\Administrator\Downloads\nhom5BackEnd\bin\Debug\net6.0\Microsoft.Data.SqlClient.dll
 C:\Users\Administrator\Downloads\nhom5BackEnd\bin\Debug\net6.0\Microsoft.EntityFrameworkCore.Design.dll
@@ -237,3 +236,4 @@ D:\Downloads\nhom5BackEnd\obj\Debug\net6.0\refint\nhom5backend.dll
 D:\Downloads\nhom5BackEnd\obj\Debug\net6.0\nhom5backend.pdb
 D:\Downloads\nhom5BackEnd\obj\Debug\net6.0\nhom5backend.genruntimeconfig.cache
 D:\Downloads\nhom5BackEnd\obj\Debug\net6.0\ref\nhom5backend.dll
+C:\Users\Administrator\Downloads\nhom5BackEnd\obj\Debug\net6.0\refint\nhom5backend.dll
