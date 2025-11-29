@@ -1,4 +1,4 @@
-// --- OrdersController.cs ---
+
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -43,7 +43,7 @@ namespace nhom5BackEnd.Controllers
         [HttpGet("my")]
         public async Task<IActionResult> GetMyOrders()
         {
-            // SỬA: Lấy ID trực tiếp từ Token
+
             int custId = GetCurrentCustomerId();
             if (custId == 0) return Unauthorized();
 
@@ -57,13 +57,13 @@ namespace nhom5BackEnd.Controllers
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            // SỬA: Lấy ID trực tiếp từ Token
+ 
             int custId = GetCurrentCustomerId();
             if (custId == 0) return Unauthorized();
 
             if (dto.Items == null || !dto.Items.Any()) return BadRequest("Order must contain items");
 
-            // Logic tính toán giữ nguyên
+
             decimal total = 0m;
             var order = new Order { CustomerId = custId, CreatedAt = DateTime.UtcNow, Status = "New" };
             foreach (var item in dto.Items)
@@ -77,7 +77,7 @@ namespace nhom5BackEnd.Controllers
                 order.OrderDetails.Add(od);
                 total += item.UnitPrice * item.Quantity;
                 
-                // Trừ tồn kho
+
                 product.Stock -= item.Quantity;
             }
 

@@ -5,21 +5,52 @@ using nhom5BackEnd.Data;
 using System.Text;
 using System.IdentityModel.Tokens.Jwt;
 using nhom5BackEnd.Models;
-using Microsoft.Extensions.FileProviders; // Quan trọng để đọc file
+using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ================== 1. CẤU HÌNH DỊCH VỤ (SERVICES) ==================
 
-// Fix lỗi tự động đổi tên Claim của .NET
+
+
 JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 
-// 1.1. Cấu hình Database (SQL Server)
-// Đảm bảo file appsettings.json đã có chuỗi kết nối "DefaultConnection"
+builder.Services.AddSwaggerGen(option =>
+{
+    option.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "nhom5backend", Version = "v1" });
+
+
+    option.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    {
+        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+        Description = "Vui lòng nhập Token vào đây (Không cần chữ Bearer nếu nhập ở đây)",
+        Name = "Authorization",
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+        BearerFormat = "JWT",
+        Scheme = "Bearer"
+    });
+
+
+    option.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+    {
+        {
+            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            {
+                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                {
+                    Type=Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                    Id="Bearer"
+                }
+            },
+            new string[]{}
+        }
+    });
+});
+
+
+
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -42,8 +73,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = "nhom5FrontEnd",
             IssuerSigningKey = new SymmetricSecurityKey(key),
             ClockSkew = TimeSpan.Zero,
-            RoleClaimType = "role",          // Khớp với AuthController
-            NameClaimType = "unique_name"    // Khớp với AuthController
+            RoleClaimType = "role",          
+            NameClaimType = "unique_name"    
         };
     });
 
@@ -62,7 +93,7 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// ================== 2. KHỞI TẠO DATABASE ==================
+
 // Tự động tạo bảng nếu chưa có (khi chạy lần đầu)
 using (var scope = app.Services.CreateScope())
 {
@@ -73,26 +104,26 @@ using (var scope = app.Services.CreateScope())
     }
     catch (Exception ex)
     {
-        // Ghi log lỗi nếu không kết nối được SQL (để debug file exe)
+
         Console.WriteLine($"Loi ket noi SQL: {ex.Message}");
     }
 }
 
-// ================== 3. PIPELINE (THỨ TỰ CỰC KỲ QUAN TRỌNG) ==================
 
-// BƯỚC 1: CORS phải chạy đầu tiên
+
+
 app.UseCors("AllowAll");
 
-// BƯỚC 2: Swagger (Bật cho cả Production để dễ test trên IIS)
+
 app.UseSwagger();
 app.UseSwaggerUI();
 
-// BƯỚC 3: Phục vụ File Tĩnh (Frontend) - Code An Toàn
+
 var servicesPath = Path.Combine(app.Environment.ContentRootPath, "services");
 
 if (Directory.Exists(servicesPath))
 {
-    // Nếu tìm thấy thư mục services thì mới phục vụ file
+
     app.UseStaticFiles(new StaticFileOptions
     {
         FileProvider = new PhysicalFileProvider(servicesPath),
@@ -101,20 +132,20 @@ if (Directory.Exists(servicesPath))
 }
 else
 {
-    // Nếu không thấy thì chỉ in cảnh báo ra console, KHÔNG làm sập web
+
     Console.WriteLine($"CANH BAO: Khong tim thay thu muc tai: {servicesPath}");
 }
 
 app.UseHttpsRedirection();
 
-// BƯỚC 4: Xác thực & Phân quyền
+
 app.UseAuthentication();
 app.UseAuthorization();
 
-// BƯỚC 5: Map Controllers (API)
+
 app.MapControllers();
 
-// BƯỚC 6: Map Trang Chủ (Fallback về index.html)
+
 app.MapGet("/", async context =>
 {
     if (Directory.Exists(servicesPath))
@@ -124,7 +155,7 @@ app.MapGet("/", async context =>
     }
     else
     {
-        // Thông báo nếu quên copy thư mục services
+
         await context.Response.WriteAsync("Backend API is running OK. (Frontend 'services' folder is missing). Check Swagger at /swagger");
     }
 });

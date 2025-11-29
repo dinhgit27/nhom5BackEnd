@@ -1,5 +1,4 @@
-// --- app.js
-// ==================== Application State ====================
+
 const app = {
     currentPage: 'login',
     currentUser: null,
@@ -18,7 +17,7 @@ const decodeJwt = (token) => {
     try {
         const base64Url = token.split('.')[1];
         const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        // Giải mã Base64 thành chuỗi JSON
+
         const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
             return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
         }).join(''));
@@ -49,7 +48,7 @@ const renderPage = () => {
         appElement.innerHTML = renderLayout();
         attachNavbarEvents();
         
-        // --- ROUTING ---
+
         if (app.currentPage === 'products') {
             fetchAdminProductsAndRender();
         } else if (app.currentPage === 'order') {
@@ -59,17 +58,17 @@ const renderPage = () => {
         } else if (app.currentPage === 'order-details') {
             renderOrderDetailsPage();
         } 
-        // --- THÊM 2 DÒNG NÀY ---
+
         else if (app.currentPage === 'my-history') {
-            renderOrderHistoryPage(); // Hàm này sẽ viết ở orders.js
+            renderOrderHistoryPage();
         }
         else if (app.currentPage === 'admin-orders') {
-            renderAdminOrdersPage();  // Hàm này sẽ viết ở orders.js
+            renderAdminOrdersPage();
         }
     }
 };
 
-// ==================== API Fetching Functions ====================
+
 
 // HÀM FETCH CHO DỮ LIỆU CÔNG KHAI
 async function fetchInitialData() {
@@ -88,13 +87,13 @@ async function fetchInitialData() {
     }
 }
 
-// HÀM FETCH SẢN PHẨM RIÊNG CHO TRANG ĐẶT HÀNG (để phân biệt với admin fetch)
+
 async function fetchProductsForOrderAndRender() {
-    await fetchInitialData(); // Tạm thời dùng lại public API
+    await fetchInitialData(); 
     renderOrderCreationPage();
 }
 
-// HÀM FETCH SẢN PHẨM CÓ AUTH CHO TRANG ADMIN
+
 async function fetchAdminProductsAndRender() {
     try {
         const response = await fetchWithAuth('/products');
@@ -112,11 +111,11 @@ async function fetchAdminProductsAndRender() {
     }
 }
 
-// HÀM TIỆN ÍCH CÓ GỬI JWT TOKEN
+
 const fetchWithAuth = async (url, options = {}) => {
     const headers = {
         'Content-Type': 'application/json',
-        // Gửi token nếu có
+
         ...(app.token && { 'Authorization': `Bearer ${app.token}` }), 
         ...(options.headers || {})
     };
@@ -138,7 +137,7 @@ const fetchWithAuth = async (url, options = {}) => {
     return response;
 };
 
-// ==================== Initialize App ====================
+
 window.addEventListener('DOMContentLoaded', async () => {
     await fetchInitialData(); // Load data ban đầu
     renderPage();

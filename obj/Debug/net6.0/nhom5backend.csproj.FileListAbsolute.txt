@@ -237,3 +237,14 @@ C:\Users\Administrator\Downloads\nhom5BackEnd\obj\Debug\net6.0\refint\nhom5backe
 C:\Users\Administrator\Downloads\nhom5BackEnd\obj\Debug\net6.0\nhom5backend.pdb
 C:\Users\Administrator\Downloads\nhom5BackEnd\obj\Debug\net6.0\nhom5backend.genruntimeconfig.cache
 C:\Users\Administrator\Downloads\nhom5BackEnd\obj\Debug\net6.0\ref\nhom5backend.dll
+D:\Downloads\nhom5BackEnd\bin\Debug\net6.0\services\app.js
+D:\Downloads\nhom5BackEnd\bin\Debug\net6.0\services\index.html
+D:\Downloads\nhom5BackEnd\bin\Debug\net6.0\services\pages\layout.js
+D:\Downloads\nhom5BackEnd\bin\Debug\net6.0\services\pages\login.js
+D:\Downloads\nhom5BackEnd\bin\Debug\net6.0\services\pages\order-details.js
+D:\Downloads\nhom5BackEnd\bin\Debug\net6.0\services\pages\order-success.js
+D:\Downloads\nhom5BackEnd\bin\Debug\net6.0\services\pages\orders.js
+D:\Downloads\nhom5BackEnd\bin\Debug\net6.0\services\pages\products.js
+D:\Downloads\nhom5BackEnd\bin\Debug\net6.0\services\pages\register.js
+D:\Downloads\nhom5BackEnd\bin\Debug\net6.0\services\server.js
+D:\Downloads\nhom5BackEnd\bin\Debug\net6.0\services\styles.css

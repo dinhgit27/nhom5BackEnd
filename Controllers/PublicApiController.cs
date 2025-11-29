@@ -46,7 +46,7 @@ namespace nhom5BackEnd.Controllers
         [HttpGet("orders")]
         public async Task<IActionResult> GetOrders()
         {
-            // load products to map names efficiently
+
             var productsDict = await _db.Products.ToDictionaryAsync(p => p.Id, p => p.Name);
 
             var orders = await _db.Orders.Include(o => o.OrderDetails).ToListAsync();
