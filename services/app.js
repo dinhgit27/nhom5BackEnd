@@ -11,7 +11,7 @@ const app = {
     lastOrderId: null,
     editingProduct: null,
 
-    apiBase: 'https://localhost:7030/api'//'http://api.nhom5.com/api' 
+    apiBase: 'http://api.nhom5.com/api'
 };
 
 const decodeJwt = (token) => {
